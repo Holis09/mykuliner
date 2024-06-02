@@ -3,8 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Added this line to import the intl package
+import 'package:mykuliner/screen/FavoriteScreen.dart';
 import 'package:mykuliner/screen/add_pos.dart';
 import 'package:mykuliner/screen/login_page.dart';
+import 'package:mykuliner/screen/profil.dart';
 import 'package:url_launcher/url_launcher.dart'; //his line to import the url_launcher package
 
 class HomeScreen extends StatelessWidget {
@@ -167,7 +169,7 @@ class HomeScreen extends StatelessWidget {
               );
             case 2:
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => Profil()),
+                MaterialPageRoute(builder: (context) => EditProfileScreen()),
               );
           }
           // Ganti halaman berdasarkan index
