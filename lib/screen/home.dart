@@ -159,7 +159,7 @@ class HomeScreen extends StatelessWidget {
             case 0:
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => HomeScreen()),
-              );// Ganti halaman berdasarkan index
+              ); // Ganti halaman berdasarkan index
             case 1:
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => FavoriteScreen()),
