@@ -155,6 +155,20 @@ class HomeScreen extends StatelessWidget {
         ],
         // Tambahkan logika untuk mengganti tab atau halaman saat item diklik
         onTap: (index) {
+          switch (index) {
+            case 0:
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+              );// Ganti halaman berdasarkan index
+            case 1:
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => FavoriteScreen()),
+              );
+            case 2:
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => Profil()),
+              );
+          }
           // Ganti halaman berdasarkan index
         },
       ),
