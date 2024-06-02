@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "320574838366",
+    "firebase_url": "https://mykuliner-a787d-default-rtdb.firebaseio.com",
+    "project_id": "mykuliner-a787d",
+    "storage_bucket": "mykuliner-a787d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:320574838366:android:c46d269fa954c863fe46cf",
+        "android_client_info": {
+          "package_name": "com.example.mykuliner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "320574838366-98c9sfnl3nrqknv5ql76oq3oabt81q32.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJ9_kIHxNpqWS-NyiA0HOrxC-P5i_4BG0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "320574838366-98c9sfnl3nrqknv5ql76oq3oabt81q32.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "320574838366-d2cignhhhljib3h8dgm0b6rsfvvdf8m0.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.kuliner"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
