@@ -18,6 +18,15 @@ class HomeScreen extends StatelessWidget {
         .pushReplacement(MaterialPageRoute(builder: (context) => LoginPage()));
   }
 
+  Future<void> deletePost(String docId) async {
+    try {
+      await FirebaseFirestore.instance.collection('posts').doc(docId).delete();
+      print("Postingan berhasil dihapus");
+    } catch (e) {
+      print("Error saat menghapus postingan: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,21 +103,15 @@ class HomeScreen extends StatelessWidget {
                         child: Text(formattedDate,
                             style: TextStyle(color: Colors.grey)),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Row(
-                          children: <Widget>[
-                            LikeButton(), // Tombol like
-                            IconButton(
-                              icon: Icon(Icons.map),
-                              onPressed: () {
-                                // Logika untuk membuka Google Maps
-                                launchURL(
-                                    'https://www.google.com/maps/search/?api=1&query=latitude,longitude');
-                              },
-                            ),
-                          ],
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          LikeButton(), // Tombol like
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () => deletePost(document.id),
+                          ),
+                        ],
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -245,7 +248,9 @@ class ImageFromFirebaseStorage extends StatelessWidget {
       builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
         if (snapshot.connectionState == ConnectionState.done &&
             snapshot.hasData) {
-          return Image.network(snapshot.data!);
+          return Image.network(snapshot.data!,
+              fit: BoxFit
+                  .cover); // Pastikan gambar menyesuaikan dengan kontainer
         } else if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         } else {
