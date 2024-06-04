@@ -20,10 +20,28 @@ class HomeScreen extends StatelessWidget {
 
   Future<void> deletePost(String docId) async {
     try {
-      await FirebaseFirestore.instance.collection('posts').doc(docId).delete();
-      print("Postingan berhasil dihapus");
+      // Dapatkan referensi dokumen
+      DocumentReference docRef =
+          FirebaseFirestore.instance.collection('posts').doc(docId);
+
+      // Dapatkan dokumen untuk membaca data gambar
+      DocumentSnapshot docSnapshot = await docRef.get();
+      if (docSnapshot.exists) {
+        Map<String, dynamic> data = docSnapshot.data() as Map<String, dynamic>;
+        String? imagePath = data['images'];
+
+        // Hapus gambar dari Firebase Storage jika imagePath ada
+        if (imagePath != null) {
+          await FirebaseStorage.instance.ref(imagePath).delete();
+          print("Gambar berhasil dihapus dari Storage");
+        }
+
+        // Hapus dokumen dari Firestore
+        await docRef.delete();
+        print("Postingan berhasil dihapus dari Firestore");
+      }
     } catch (e) {
-      print("Error saat menghapus postingan: $e");
+      print("Error saat menghapus postingan dan gambar: $e");
     }
   }
 
