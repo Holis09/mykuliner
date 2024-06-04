@@ -7,7 +7,6 @@ import 'package:mykuliner/screen/FavoriteScreen.dart';
 import 'package:mykuliner/screen/add_pos.dart';
 import 'package:mykuliner/screen/login_page.dart';
 import 'package:mykuliner/screen/profil.dart';
-import 'package:url_launcher/url_launcher.dart'; //his line to import the url_launcher package
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -28,7 +27,7 @@ class HomeScreen extends StatelessWidget {
       DocumentSnapshot docSnapshot = await docRef.get();
       if (docSnapshot.exists) {
         Map<String, dynamic> data = docSnapshot.data() as Map<String, dynamic>;
-        String? imagePath = data['images'];
+        String? imagePath = data['imageUrl'];
 
         // Hapus gambar dari Firebase Storage jika imagePath ada
         if (imagePath != null) {
@@ -93,7 +92,9 @@ class HomeScreen extends StatelessWidget {
                 }
 
                 String? images = data[
-                    'images']; // Pastikan Anda memiliki field imagePath di dokumen Firestore Anda
+                    'imageUrl']; // Pastikan Anda memiliki field imageUrl di dokumen Firestore Anda
+                print(
+                    "URL Gambar: ${data['imageUrl']}"); // Added this line to print the image URL
 
                 return Card(
                   child: Column(
@@ -209,6 +210,26 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+class ImageFromFirebaseStorage extends StatelessWidget {
+  final String images;
+
+  const ImageFromFirebaseStorage({super.key, required this.images});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity, // Lebar gambar mengisi seluruh lebar container
+      height: 200.0, // Tinggi gambar tetap
+      child: Image.network(
+        images,
+        fit: BoxFit
+            .cover, // Menutupi seluruh area container tanpa mengubah rasio aspek
+        alignment: Alignment.center, // Menjaga gambar tetap di tengah
+      ),
+    );
+  }
+}
+
 class LikeButton extends StatefulWidget {
   @override
   _LikeButtonState createState() => _LikeButtonState();
@@ -226,54 +247,6 @@ class _LikeButtonState extends State<LikeButton> {
         setState(() {
           isLiked = !isLiked; // Toggle state liked
         });
-      },
-    );
-  }
-}
-
-void launchURL(String url) async {
-  if (await canLaunch(url)) {
-    await launch(url);
-  } else {
-    throw 'Could not launch $url';
-  }
-}
-
-class ImageFromFirebaseStorage extends StatelessWidget {
-  final String? images;
-
-  const ImageFromFirebaseStorage({super.key, this.images});
-
-  Future<String> _getImageUrl() async {
-    if (images == null) {
-      // Kembalikan URL gambar default jika imagePath adalah null
-      return 'https://example.com/default_image.png'; // Ganti dengan URL gambar default Anda
-    }
-    try {
-      String imageUrl =
-          await FirebaseStorage.instance.ref(images).getDownloadURL();
-      return imageUrl;
-    } catch (e) {
-      print('Error loading image: $e');
-      return 'https://example.com/default_image.png'; // Kembalikan URL gambar default jika terjadi kesalahan
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: _getImageUrl(),
-      builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-        if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.hasData) {
-          return Image.network(snapshot.data!,
-              fit: BoxFit
-                  .cover); // Pastikan gambar menyesuaikan dengan kontainer
-        } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        } else {
-          return const CircularProgressIndicator();
-        }
       },
     );
   }
