@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:mykuliner/screen/FavoriteScreen.dart';
+import 'package:mykuliner/screen/home.dart';
 
 class EditProfileScreen extends StatefulWidget {
   @override
@@ -62,6 +64,41 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite),
+            label: 'Favorite',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+              );
+              break;
+            case 1:
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => FavoriteScreen()),
+              );
+              break;
+            case 2:
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => EditProfileScreen()),
+              );
+              break;
+          }
+        },
       ),
     );
   }

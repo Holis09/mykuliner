@@ -58,7 +58,7 @@ class _RegisterPageState extends State<RegisterPage> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.purpleAccent, Colors.white],
+            colors: [Colors.black, Colors.white],
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
           ),
@@ -80,7 +80,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Colors.purpleAccent,
+                      color: Colors.black,
                     ),
                   ),
                 ),
@@ -128,7 +128,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ElevatedButton(
                   onPressed: _register,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pinkAccent,
+                    backgroundColor: Colors.cyan,
                     padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),

@@ -2,9 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Added this line to import the intl package
+import 'package:intl/intl.dart';
 import 'package:mykuliner/screen/FavoriteScreen.dart';
 import 'package:mykuliner/screen/add_pos.dart';
+import 'package:mykuliner/screen/detail_postingan.dart';
 import 'package:mykuliner/screen/login_page.dart';
 import 'package:mykuliner/screen/profil.dart';
 
@@ -19,23 +20,19 @@ class HomeScreen extends StatelessWidget {
 
   Future<void> deletePost(String docId) async {
     try {
-      // Dapatkan referensi dokumen
       DocumentReference docRef =
           FirebaseFirestore.instance.collection('posts').doc(docId);
 
-      // Dapatkan dokumen untuk membaca data gambar
       DocumentSnapshot docSnapshot = await docRef.get();
       if (docSnapshot.exists) {
         Map<String, dynamic> data = docSnapshot.data() as Map<String, dynamic>;
-        String? imagePath = data['imageUrl'];
+        String? imagePath = data['imageUrls'];
 
-        // Hapus gambar dari Firebase Storage jika imagePath ada
         if (imagePath != null) {
           await FirebaseStorage.instance.ref(imagePath).delete();
           print("Gambar berhasil dihapus dari Storage");
         }
 
-        // Hapus dokumen dari Firestore
         await docRef.delete();
         print("Postingan berhasil dihapus dari Firestore");
       }
@@ -53,9 +50,7 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.home),
-            onPressed: () {
-              // Logika untuk kembali ke halaman Home, jika diperlukan
-            },
+            onPressed: () {},
           ),
           IconButton(
             onPressed: () => signOut(context),
@@ -91,20 +86,19 @@ class HomeScreen extends StatelessWidget {
                       .format(dateTime); // Format DateTime ke String
                 }
 
-                String? images = data[
-                    'imageUrl']; // Pastikan Anda memiliki field imageUrl di dokumen Firestore Anda
+                List<dynamic>? images = data[
+                    'imageUrls']; // Pastikan Anda memiliki field imageUrl di dokumen Firestore Anda
                 print(
-                    "URL Gambar: ${data['imageUrl']}"); // Added this line to print the image URL
+                    "URL Gambar: ${data['imageUrls']}"); // Added this line to print the image URL
 
                 return Card(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      if (images != null)
-                        ImageFromFirebaseStorage(images: images)
+                      if (images != null && images.isNotEmpty)
+                        ImageFromFirebaseStorage(images: images.cast<String>())
                       else
-                        const Text(
-                            'Tidak ada gambar'), // Placeholder jika imagePath null
+                        const Text('Tidak ada gambar'),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(data['nama'] ?? 'Nama tidak tersedia',
@@ -178,7 +172,6 @@ class HomeScreen extends StatelessWidget {
             label: 'Profile',
           ),
         ],
-        // Tambahkan logika untuk mengganti tab atau halaman saat item diklik
         onTap: (index) {
           switch (index) {
             case 0:
@@ -211,20 +204,37 @@ class HomeScreen extends StatelessWidget {
 }
 
 class ImageFromFirebaseStorage extends StatelessWidget {
-  final String images;
+  final List<String>? images;
 
-  const ImageFromFirebaseStorage({super.key, required this.images});
+  const ImageFromFirebaseStorage({super.key, this.images});
 
   @override
   Widget build(BuildContext context) {
+    if (images == null || images!.isEmpty) {
+      return const Text('Tidak ada gambar');
+    }
+
     return Container(
-      width: double.infinity, // Lebar gambar mengisi seluruh lebar container
-      height: 200.0, // Tinggi gambar tetap
-      child: Image.network(
-        images,
-        fit: BoxFit
-            .cover, // Menutupi seluruh area container tanpa mengubah rasio aspek
-        alignment: Alignment.center, // Menjaga gambar tetap di tengah
+      height: 200.0,
+      child: PageView.builder(
+        itemCount: images?.length ?? 0,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => DetailPostingan(
+                        imageUrls: images ?? ['default_image_url'])),
+              );
+            },
+            child: Image.network(
+              images?[index] ?? 'default_image_url',
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            ),
+          );
+        },
       ),
     );
   }

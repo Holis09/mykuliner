@@ -15,8 +15,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
   final _descriptionController = TextEditingController();
   final _namaController =
       TextEditingController(); // Added this line to define _namaController
-  XFile? _pickedFile;
-  String? _imageUrl;
+  List<XFile>? _pickedFiles;
+  List<String> _imageUrlList = [];
 
   @override
   void initState() {
@@ -25,26 +25,34 @@ class _AddPostScreenState extends State<AddPostScreen> {
   }
 
   Future<void> _pickImage() async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('images')
-          .child(DateTime.now().toString() + '.jpg');
+    final List<XFile>? pickedFiles = await ImagePicker().pickMultiImage();
+    if (pickedFiles != null && pickedFiles.isNotEmpty) {
+      for (var file in pickedFiles) {
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('images')
+            .child(DateTime.now().toString() + '.jpg');
 
-      await ref.putFile(File(pickedFile.path));
-      _imageUrl = await ref.getDownloadURL();
+        await ref.putFile(File(file.path));
+        final imageUrl = await ref.getDownloadURL();
+        _imageUrlList.add(imageUrl);
+      }
 
       setState(() {
-        _pickedFile = pickedFile;
+        _pickedFiles = pickedFiles;
       });
     }
   }
 
   Widget _buildImage() {
-    if (_pickedFile != null) {
-      return Image.file(File(_pickedFile!.path));
+    if (_pickedFiles != null && _pickedFiles!.isNotEmpty) {
+      return ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _pickedFiles!.length,
+        itemBuilder: (context, index) {
+          return Image.file(File(_pickedFiles![index].path));
+        },
+      );
     } else {
       return Center(child: Text('Tap to add image'));
     }
@@ -78,11 +86,11 @@ class _AddPostScreenState extends State<AddPostScreen> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
-                if (_imageUrl != null &&
+                if (_imageUrlList.isNotEmpty &&
                     _descriptionController.text.isNotEmpty &&
                     _namaController.text.isNotEmpty) {
                   await FirebaseFirestore.instance.collection('posts').add({
-                    'imageUrl': _imageUrl,
+                    'imageUrls': _imageUrlList,
                     'description': _descriptionController.text,
                     'nama': _namaController.text,
                     'waktu': DateTime.now(),
