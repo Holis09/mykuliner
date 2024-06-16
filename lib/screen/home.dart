@@ -41,6 +41,30 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
+  void toggleFavorite(String postId) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentReference userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      DocumentSnapshot userDoc = await userRef.get();
+
+      if (userDoc.exists) {
+        List<String> favorites = List<String>.from(userDoc['favorites'] ?? []);
+
+        if (favorites.contains(postId)) {
+          // Remove from favorites
+          userRef.update({
+            'favorites': FieldValue.arrayRemove([postId])
+          });
+        } else {
+          // Add to favorites
+          userRef.update({
+            'favorites': FieldValue.arrayUnion([postId])
+          });
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,20 +98,20 @@ class HomeScreen extends StatelessWidget {
             return ListView(
               children: snapshot.data!.docs.map((DocumentSnapshot document) {
                 Map<String, dynamic> data =
-                    document.data()! as Map<String, dynamic>;
+                document.data()! as Map<String, dynamic>;
 
                 // Periksa apakah 'waktu' ada dan bukan null
                 Timestamp? timestamp = data['waktu'] as Timestamp?;
                 String formattedDate = 'Tanggal tidak tersedia';
                 if (timestamp != null) {
                   DateTime dateTime =
-                      timestamp.toDate(); // Konversi ke DateTime
+                  timestamp.toDate(); // Konversi ke DateTime
                   formattedDate = DateFormat('yyyy-MM-dd – kk:mm')
                       .format(dateTime); // Format DateTime ke String
                 }
 
                 List<dynamic>? images = data[
-                    'imageUrls']; // Pastikan Anda memiliki field imageUrl di dokumen Firestore Anda
+                'imageUrls']; // Pastikan Anda memiliki field imageUrl di dokumen Firestore Anda
                 print(
                     "URL Gambar: ${data['imageUrls']}"); // Added this line to print the image URL
 
@@ -119,7 +143,11 @@ class HomeScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          LikeButton(), // Tombol like
+                          LikeButton(postId: document.id),
+                          IconButton(icon: Icon(Icons.favorite),
+                color: Colors.grey,
+                onPressed: () => toggleFavorite(document.id),
+                          ),// Pass postId to LikeButton
                           IconButton(
                             icon: Icon(Icons.delete),
                             onPressed: () => deletePost(document.id),
@@ -178,16 +206,18 @@ class HomeScreen extends StatelessWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => HomeScreen()),
               ); // Ganti halaman berdasarkan index
+              break;
             case 1:
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => FavoriteScreen()),
               );
+              break;
             case 2:
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => EditProfileScreen()),
               );
+              break;
           }
-          // Ganti halaman berdasarkan index
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -224,8 +254,10 @@ class ImageFromFirebaseStorage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => DetailPostingan(
-                        imageUrls: images ?? ['default_image_url'])),
+                  builder: (context) => DetailPostingan(
+                    imageUrls: images ?? ['default_image_url'],
+                  ),
+                ),
               );
             },
             child: Image.network(
@@ -241,23 +273,67 @@ class ImageFromFirebaseStorage extends StatelessWidget {
 }
 
 class LikeButton extends StatefulWidget {
+  final String postId;
+
+  const LikeButton({required this.postId});
+
   @override
   _LikeButtonState createState() => _LikeButtonState();
 }
 
 class _LikeButtonState extends State<LikeButton> {
   bool isLiked = false;
+  User? user = FirebaseAuth.instance.currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfLiked();
+  }
+
+  void _checkIfLiked() async {
+    if (user != null) {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user!.uid)
+          .get();
+
+      if (userDoc.exists) {
+        List<String> likedPosts = List<String>.from(userDoc['likedPosts'] ?? []);
+        setState(() {
+          isLiked = likedPosts.contains(widget.postId);
+        });
+      }
+    }
+  }
+
+  void _toggleLike() async {
+    if (user != null) {
+      DocumentReference userRef =
+      FirebaseFirestore.instance.collection('users').doc(user!.uid);
+
+      if (isLiked) {
+        userRef.update({
+          'likedPosts': FieldValue.arrayRemove([widget.postId])
+        });
+      } else {
+        userRef.update({
+          'likedPosts': FieldValue.arrayUnion([widget.postId])
+        });
+      }
+
+      setState(() {
+        isLiked = !isLiked;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
       icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
       color: isLiked ? Colors.red : null, // Ubah warna jika disukai
-      onPressed: () {
-        setState(() {
-          isLiked = !isLiked; // Toggle state liked
-        });
-      },
+      onPressed: _toggleLike,
     );
   }
 }
