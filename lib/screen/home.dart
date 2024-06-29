@@ -44,7 +44,8 @@ class HomeScreen extends StatelessWidget {
   void toggleFavorite(String postId) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      DocumentReference userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      DocumentReference userRef =
+          FirebaseFirestore.instance.collection('users').doc(user.uid);
       DocumentSnapshot userDoc = await userRef.get();
 
       if (userDoc.exists) {
@@ -98,20 +99,20 @@ class HomeScreen extends StatelessWidget {
             return ListView(
               children: snapshot.data!.docs.map((DocumentSnapshot document) {
                 Map<String, dynamic> data =
-                document.data()! as Map<String, dynamic>;
+                    document.data()! as Map<String, dynamic>;
 
                 // Periksa apakah 'waktu' ada dan bukan null
                 Timestamp? timestamp = data['waktu'] as Timestamp?;
                 String formattedDate = 'Tanggal tidak tersedia';
                 if (timestamp != null) {
                   DateTime dateTime =
-                  timestamp.toDate(); // Konversi ke DateTime
+                      timestamp.toDate(); // Konversi ke DateTime
                   formattedDate = DateFormat('yyyy-MM-dd – kk:mm')
                       .format(dateTime); // Format DateTime ke String
                 }
 
                 List<dynamic>? images = data[
-                'imageUrls']; // Pastikan Anda memiliki field imageUrl di dokumen Firestore Anda
+                    'imageUrls']; // Pastikan Anda memiliki field imageUrl di dokumen Firestore Anda
                 print(
                     "URL Gambar: ${data['imageUrls']}"); // Added this line to print the image URL
 
@@ -144,37 +145,14 @@ class HomeScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           LikeButton(postId: document.id),
-                          IconButton(icon: Icon(Icons.favorite),
-                color: Colors.grey,
-                onPressed: () => toggleFavorite(document.id),
-                          ),// Pass postId to LikeButton
                           IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () => deletePost(document.id),
-                          ),
+                            icon: Icon(Icons.favorite),
+                            color: Colors.grey,
+                            onPressed: () => toggleFavorite(document.id),
+                          ), // Pass postId to LikeButton
                         ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Row(
-                          children: <Widget>[
-                            Expanded(
-                              child: TextField(
-                                decoration: InputDecoration(
-                                  hintText: 'Tulis komentar...',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.send),
-                              onPressed: () {
-                                // Tambahkan logika untuk mengirim komentar
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
+
                       // Baris kode yang ditambahka
                     ],
                   ),
@@ -299,7 +277,8 @@ class _LikeButtonState extends State<LikeButton> {
           .get();
 
       if (userDoc.exists) {
-        List<String> likedPosts = List<String>.from(userDoc['likedPosts'] ?? []);
+        List<String> likedPosts =
+            List<String>.from(userDoc['likedPosts'] ?? []);
         setState(() {
           isLiked = likedPosts.contains(widget.postId);
         });
@@ -310,7 +289,7 @@ class _LikeButtonState extends State<LikeButton> {
   void _toggleLike() async {
     if (user != null) {
       DocumentReference userRef =
-      FirebaseFirestore.instance.collection('users').doc(user!.uid);
+          FirebaseFirestore.instance.collection('users').doc(user!.uid);
 
       if (isLiked) {
         userRef.update({
