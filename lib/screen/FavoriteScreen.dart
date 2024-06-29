@@ -16,7 +16,10 @@ class FavoriteScreen extends StatelessWidget {
         title: Text('Favorite'),
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text('Terjadi kesalahan: ${snapshot.error}'));
@@ -30,7 +33,8 @@ class FavoriteScreen extends StatelessWidget {
             return Center(child: Text('Tidak ada data favorit.'));
           }
 
-          List<String> favoritePosts = List<String>.from(snapshot.data!['favorites'] ?? []);
+          List<String> favoritePosts =
+              List<String>.from(snapshot.data!['favorites'] ?? []);
 
           if (favoritePosts.isEmpty) {
             return Center(child: Text('Belum ada post favorit.'));
@@ -40,17 +44,22 @@ class FavoriteScreen extends StatelessWidget {
             itemCount: favoritePosts.length,
             itemBuilder: (context, index) {
               return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance.collection('posts').doc(favoritePosts[index]).get(),
+                future: FirebaseFirestore.instance
+                    .collection('posts')
+                    .doc(favoritePosts[index])
+                    .get(),
                 builder: (context, postSnapshot) {
                   if (postSnapshot.hasError || !postSnapshot.hasData) {
                     return Container(); // Handle error or loading state
                   }
 
-                  Map<String, dynamic> postData = postSnapshot.data!.data() as Map<String, dynamic>;
+                  Map<String, dynamic> postData =
+                      postSnapshot.data!.data() as Map<String, dynamic>;
 
                   return ListTile(
                     title: Text(postData['nama'] ?? 'Nama tidak tersedia'),
-                    subtitle: Text(postData['description'] ?? 'Deskripsi tidak tersedia'),
+                    subtitle: Text(
+                        postData['description'] ?? 'Deskripsi tidak tersedia'),
                     // You can add more UI elements to display details of the favorite post
                     // Navigate to post detail screen or perform other actions here
                   );
