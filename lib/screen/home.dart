@@ -2,10 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Added this line to import the intl package
+import 'package:intl/intl.dart';
+import 'package:mykuliner/screen/FavoriteScreen.dart';
 import 'package:mykuliner/screen/add_pos.dart';
+import 'package:mykuliner/screen/detail_postingan.dart';
 import 'package:mykuliner/screen/login_page.dart';
-import 'package:url_launcher/url_launcher.dart'; //his line to import the url_launcher package
+import 'package:mykuliner/screen/profil.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -14,6 +16,53 @@ class HomeScreen extends StatelessWidget {
     await FirebaseAuth.instance.signOut();
     Navigator.of(context)
         .pushReplacement(MaterialPageRoute(builder: (context) => LoginPage()));
+  }
+
+  Future<void> deletePost(String docId) async {
+    try {
+      DocumentReference docRef =
+          FirebaseFirestore.instance.collection('posts').doc(docId);
+
+      DocumentSnapshot docSnapshot = await docRef.get();
+      if (docSnapshot.exists) {
+        Map<String, dynamic> data = docSnapshot.data() as Map<String, dynamic>;
+        String? imagePath = data['imageUrls'];
+
+        if (imagePath != null) {
+          await FirebaseStorage.instance.ref(imagePath).delete();
+          print("Gambar berhasil dihapus dari Storage");
+        }
+
+        await docRef.delete();
+        print("Postingan berhasil dihapus dari Firestore");
+      }
+    } catch (e) {
+      print("Error saat menghapus postingan dan gambar: $e");
+    }
+  }
+
+  void toggleFavorite(String postId) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentReference userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      DocumentSnapshot userDoc = await userRef.get();
+
+      if (userDoc.exists) {
+        List<String> favorites = List<String>.from(userDoc['favorites'] ?? []);
+
+        if (favorites.contains(postId)) {
+          // Remove from favorites
+          userRef.update({
+            'favorites': FieldValue.arrayRemove([postId])
+          });
+        } else {
+          // Add to favorites
+          userRef.update({
+            'favorites': FieldValue.arrayUnion([postId])
+          });
+        }
+      }
+    }
   }
 
   @override
@@ -25,9 +74,7 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.home),
-            onPressed: () {
-              // Logika untuk kembali ke halaman Home, jika diperlukan
-            },
+            onPressed: () {},
           ),
           IconButton(
             onPressed: () => signOut(context),
@@ -51,30 +98,31 @@ class HomeScreen extends StatelessWidget {
             return ListView(
               children: snapshot.data!.docs.map((DocumentSnapshot document) {
                 Map<String, dynamic> data =
-                    document.data()! as Map<String, dynamic>;
+                document.data()! as Map<String, dynamic>;
 
                 // Periksa apakah 'waktu' ada dan bukan null
                 Timestamp? timestamp = data['waktu'] as Timestamp?;
                 String formattedDate = 'Tanggal tidak tersedia';
                 if (timestamp != null) {
                   DateTime dateTime =
-                      timestamp.toDate(); // Konversi ke DateTime
+                  timestamp.toDate(); // Konversi ke DateTime
                   formattedDate = DateFormat('yyyy-MM-dd – kk:mm')
                       .format(dateTime); // Format DateTime ke String
                 }
 
-                String? images = data[
-                    'images']; // Pastikan Anda memiliki field imagePath di dokumen Firestore Anda
+                List<dynamic>? images = data[
+                'imageUrls']; // Pastikan Anda memiliki field imageUrl di dokumen Firestore Anda
+                print(
+                    "URL Gambar: ${data['imageUrls']}"); // Added this line to print the image URL
 
                 return Card(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      if (images != null)
-                        ImageFromFirebaseStorage(images: images)
+                      if (images != null && images.isNotEmpty)
+                        ImageFromFirebaseStorage(images: images.cast<String>())
                       else
-                        const Text(
-                            'Tidak ada gambar'), // Placeholder jika imagePath null
+                        const Text('Tidak ada gambar'),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(data['nama'] ?? 'Nama tidak tersedia',
@@ -92,21 +140,19 @@ class HomeScreen extends StatelessWidget {
                         child: Text(formattedDate,
                             style: TextStyle(color: Colors.grey)),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Row(
-                          children: <Widget>[
-                            LikeButton(), // Tombol like
-                            IconButton(
-                              icon: Icon(Icons.map),
-                              onPressed: () {
-                                // Logika untuk membuka Google Maps
-                                launchURL(
-                                    'https://www.google.com/maps/search/?api=1&query=latitude,longitude');
-                              },
-                            ),
-                          ],
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          LikeButton(postId: document.id),
+                          IconButton(icon: Icon(Icons.favorite),
+                color: Colors.grey,
+                onPressed: () => toggleFavorite(document.id),
+                          ),// Pass postId to LikeButton
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () => deletePost(document.id),
+                          ),
+                        ],
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -129,6 +175,7 @@ class HomeScreen extends StatelessWidget {
                           ],
                         ),
                       ),
+                      // Baris kode yang ditambahka
                     ],
                   ),
                 );
@@ -153,9 +200,24 @@ class HomeScreen extends StatelessWidget {
             label: 'Profile',
           ),
         ],
-        // Tambahkan logika untuk mengganti tab atau halaman saat item diklik
         onTap: (index) {
-          // Ganti halaman berdasarkan index
+          switch (index) {
+            case 0:
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+              ); // Ganti halaman berdasarkan index
+              break;
+            case 1:
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => FavoriteScreen()),
+              );
+              break;
+            case 2:
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => EditProfileScreen()),
+              );
+              break;
+          }
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -171,70 +233,107 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+class ImageFromFirebaseStorage extends StatelessWidget {
+  final List<String>? images;
+
+  const ImageFromFirebaseStorage({super.key, this.images});
+
+  @override
+  Widget build(BuildContext context) {
+    if (images == null || images!.isEmpty) {
+      return const Text('Tidak ada gambar');
+    }
+
+    return Container(
+      height: 200.0,
+      child: PageView.builder(
+        itemCount: images?.length ?? 0,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DetailPostingan(
+                    imageUrls: images ?? ['default_image_url'],
+                  ),
+                ),
+              );
+            },
+            child: Image.network(
+              images?[index] ?? 'default_image_url',
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class LikeButton extends StatefulWidget {
+  final String postId;
+
+  const LikeButton({required this.postId});
+
   @override
   _LikeButtonState createState() => _LikeButtonState();
 }
 
 class _LikeButtonState extends State<LikeButton> {
   bool isLiked = false;
+  User? user = FirebaseAuth.instance.currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfLiked();
+  }
+
+  void _checkIfLiked() async {
+    if (user != null) {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user!.uid)
+          .get();
+
+      if (userDoc.exists) {
+        List<String> likedPosts = List<String>.from(userDoc['likedPosts'] ?? []);
+        setState(() {
+          isLiked = likedPosts.contains(widget.postId);
+        });
+      }
+    }
+  }
+
+  void _toggleLike() async {
+    if (user != null) {
+      DocumentReference userRef =
+      FirebaseFirestore.instance.collection('users').doc(user!.uid);
+
+      if (isLiked) {
+        userRef.update({
+          'likedPosts': FieldValue.arrayRemove([widget.postId])
+        });
+      } else {
+        userRef.update({
+          'likedPosts': FieldValue.arrayUnion([widget.postId])
+        });
+      }
+
+      setState(() {
+        isLiked = !isLiked;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
       icon: Icon(isLiked ? Icons.favorite : Icons.favorite_border),
       color: isLiked ? Colors.red : null, // Ubah warna jika disukai
-      onPressed: () {
-        setState(() {
-          isLiked = !isLiked; // Toggle state liked
-        });
-      },
-    );
-  }
-}
-
-void launchURL(String url) async {
-  if (await canLaunch(url)) {
-    await launch(url);
-  } else {
-    throw 'Could not launch $url';
-  }
-}
-
-class ImageFromFirebaseStorage extends StatelessWidget {
-  final String? images;
-
-  const ImageFromFirebaseStorage({super.key, this.images});
-
-  Future<String> _getImageUrl() async {
-    if (images == null) {
-      // Kembalikan URL gambar default jika imagePath adalah null
-      return 'https://example.com/default_image.png'; // Ganti dengan URL gambar default Anda
-    }
-    try {
-      String imageUrl =
-          await FirebaseStorage.instance.ref(images).getDownloadURL();
-      return imageUrl;
-    } catch (e) {
-      print('Error loading image: $e');
-      return 'https://example.com/default_image.png'; // Kembalikan URL gambar default jika terjadi kesalahan
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: _getImageUrl(),
-      builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-        if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.hasData) {
-          return Image.network(snapshot.data!);
-        } else if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        } else {
-          return const CircularProgressIndicator();
-        }
-      },
+      onPressed: _toggleLike,
     );
   }
 }
