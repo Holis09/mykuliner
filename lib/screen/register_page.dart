@@ -33,13 +33,14 @@ class _RegisterPageState extends State<RegisterPage> {
         email: _emailController.text,
         password: _passwordController.text,
       );
+
+      // Update profil pengguna dengan username
+      await userCredential.user!
+          .updateProfile(displayName: _usernameController.text);
       print('User registered: ${userCredential.user}');
 
-      // Redirect ke halaman home setelah pendaftaran berhasil
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
+      // Redirect ke halaman login setelah pendaftaran berhasil
+      Navigator.pushReplacementNamed(context, '/login');
     } on FirebaseAuthException catch (e) {
       // Tangani error yang terjadi saat pembuatan akun
       if (e.code == 'email-already-in-use') {
@@ -64,7 +65,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
         child: Center(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: EdgeInsets.all(16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

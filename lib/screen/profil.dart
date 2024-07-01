@@ -1,7 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:mykuliner/screen/FavoriteScreen.dart';
-import 'package:mykuliner/screen/home.dart';
 
 class EditProfileScreen extends StatefulWidget {
   @override
@@ -37,68 +35,57 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
+  void _logout() async {
+    await _auth.signOut();
+    Navigator.of(context)
+        .pushReplacementNamed('/login'); // Asumsi Anda memiliki route login
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Dapatkan pengguna yang saat ini login
+    User? user = FirebaseAuth.instance.currentUser;
+
+    // Akses username
+    String? username = user?.displayName;
+
     return Scaffold(
       appBar: AppBar(title: Text('Edit Profile')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _displayNameController,
-              decoration: InputDecoration(labelText: 'Display Name'),
-            ),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: _phoneController,
-              decoration: InputDecoration(labelText: 'Phone Number'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _updateProfile,
-              child: Text('Update Profile'),
-            ),
-          ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Text('Username: ${username ?? "Tidak diketahui"}'),
+              TextField(
+                controller: _displayNameController,
+                decoration: InputDecoration(labelText: 'Display Name'),
+              ),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(labelText: 'Email'),
+              ),
+              TextField(
+                controller: _phoneController,
+                decoration: InputDecoration(labelText: 'Phone Number'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _updateProfile,
+                child: Text('Update Profile'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _logout,
+                child: Text('Logout'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      Colors.red, // Warna merah untuk tombol logout
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Favorite',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => HomeScreen()),
-              );
-              break;
-            case 1:
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => FavoriteScreen()),
-              );
-              break;
-            case 2:
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => EditProfileScreen()),
-              );
-              break;
-          }
-        },
       ),
     );
   }
