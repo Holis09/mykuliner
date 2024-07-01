@@ -123,3 +123,27 @@ class DetailScreen extends StatelessWidget {
     );
   }
 }
+
+class DetailPostingan extends StatelessWidget {
+  final List<String> imageUrls;
+
+  const DetailPostingan({Key? key, required this.imageUrls}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Detail Postingan'),
+      ),
+      body: PageView.builder(
+        itemCount: imageUrls.length,
+        itemBuilder: (context, index) {
+          return Image.network(
+            imageUrls[index],
+            fit: BoxFit.cover,
+          );
+        },
+      ),
+    );
+  }
+}
